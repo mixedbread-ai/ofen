@@ -31,6 +31,7 @@ def to_torch(features: ModelFeatures) -> ModelFeatures:
 
     """
     import torch
+
     return {k: torch.tensor(v) for k, v in features.items()}
 
 
@@ -290,7 +291,9 @@ class TextProcessor(BaseProcessor):
         """
         max_length = max_length if max_length is not None else self.config.max_length
         return_tensors = return_tensors if return_tensors is not None else self.return_tensors
-        return_token_type_ids = return_token_type_ids if return_token_type_ids is not None else self.return_token_type_ids
+        return_token_type_ids = (
+            return_token_type_ids if return_token_type_ids is not None else self.return_token_type_ids
+        )
         pad_token_id = pad_token_id if pad_token_id is not None else self.pad_token_id
 
         encodings = self._tokenizer.encode_batch(text, add_special_tokens=add_special_tokens)

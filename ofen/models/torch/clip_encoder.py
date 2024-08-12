@@ -136,9 +136,7 @@ class ClipEncoder(TorchModule, OnnxExportable):
         """Forward pass of the ClipEncoder."""
         if input_ids is None and pixel_values is None:
             msg = "Either text input (input_ids and attention_mask) or image input (pixel_values) must be provided."
-            raise ValueError(
-                msg
-            )
+            raise ValueError(msg)
 
         with torch.inference_mode(mode=not self.training):
             if pixel_values is not None:

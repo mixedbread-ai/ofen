@@ -51,16 +51,16 @@ def test_cross_encoder_pipe(cross_encoder):
 def test_cross_encoder_score(cross_encoder):
     input_texts = ["Document 1", "Document 2"]
     query = "Query 1"
-    outputs = cross_encoder.rerank(query, input_texts)
+    output = cross_encoder.rerank(query, input_texts)
 
-    assert len(outputs) == len(input_texts)
+    assert len(output.results) == len(input_texts)
 
 
 def test_cross_encoder_score_batch_size(cross_encoder):
     input_texts = ["Document"] * 10
     query = "Query 1"
-    outputs = cross_encoder.rerank(query, input_texts, batch_size=4)
+    output = cross_encoder.rerank(query, input_texts, batch_size=4)
     
-    assert len(outputs) == len(input_texts)
+    assert len(output.results) == len(input_texts)
 
 

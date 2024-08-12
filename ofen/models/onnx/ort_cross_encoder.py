@@ -33,9 +33,7 @@ class ORTCrossEncoder(BaseORTModel, BaseCrossEncoder):
         """
         if not processor:
             processor_kwargs = processor_kwargs or {}
-            processor = TextProcessor.from_pretrained(
-                name_or_path, return_tensors="np", **processor_kwargs
-            )
+            processor = TextProcessor.from_pretrained(name_or_path, return_tensors="np", **processor_kwargs)
 
         super().__init__(name_or_path, processor=processor, **kwargs)
 

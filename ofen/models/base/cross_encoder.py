@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import abc
-from dataclasses import dataclass
 import dataclasses
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
@@ -23,16 +23,20 @@ class CrossEncoderOutput(TypedDict):
 
     scores: Tensor | np.ndarray
 
+
 @dataclasses.dataclass
 class RankResult:
     """Represents the result of a ranking operation."""
+
     score: float
     index: int
     input: str | dict | None = None
 
+
 @dataclass
 class CrossEncoderResult:
     """Output of cross-encoder ranking."""
+
     results: list[RankResult]
     total_tokens: int
 
@@ -50,6 +54,7 @@ class CrossEncoderResult:
     def indices(self) -> np.ndarray:
         """Get the indices."""
         return np.array([result.index for result in self.results])
+
 
 class BaseCrossEncoder(BaseModel):
     """Base class for cross encoder models."""
@@ -70,7 +75,15 @@ class BaseCrossEncoder(BaseModel):
 
     @Runner.with_metrics
     def rerank(
-        self, query: str, documents: list[str], *, top_k: int = 100, sort: bool = True, batch_size: int = 32, return_input: bool = False, **kwargs
+        self,
+        query: str,
+        documents: list[str],
+        *,
+        top_k: int = 100,
+        sort: bool = True,
+        batch_size: int = 32,
+        return_input: bool = False,
+        **kwargs,
     ) -> CrossEncoderResult:
         """Rerank documents based on a single query.
 
@@ -138,7 +151,10 @@ class BaseCrossEncoder(BaseModel):
 
         top_k_scores, top_k_indices = numpy_utils.top_k_numpy(scores=scores, k=top_k, sort=sort)
 
-        results = [RankResult(index=i, score=score, input=documents[i] if return_input else None) for i, score in zip(top_k_indices, top_k_scores)]
+        results = [
+            RankResult(index=i, score=score, input=documents[i] if return_input else None)
+            for i, score in zip(top_k_indices, top_k_scores)
+        ]
 
         return CrossEncoderResult(
             total_tokens=total_tokens,

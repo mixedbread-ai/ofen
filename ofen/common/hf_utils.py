@@ -168,7 +168,7 @@ def get_model_config(name_or_path: str, **hf_kwargs) -> dict:
 
         with open(config_path) as file:
             return json.load(file)
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -242,7 +242,7 @@ def download_file_from_hf(
             token=token,
             cache_dir=cache_dir,
         )
-    except Exception as e:
+    except Exception:
         local_path = os.path.join(repo_id, path) if repo_id.startswith("/") else os.path.join(cache_dir, repo_id, path)
 
         if os.path.exists(local_path):

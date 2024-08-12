@@ -1,10 +1,11 @@
 [project]
 name = "ofen"
 version = "0.0.1"
-description = "Multimodal AI for Content Understanding and Generation"
+description = "Making transformers production ready"
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.9"
-keywords = ["AI", "Multimodal", "Content Generation", "Content Understanding"]
+keywords = ["AI", "Multimodal", "Embeddings", "Content Understanding"]
 authors = [
     { email = "julius@mixedbread.ai", name = "Julius Lipp" },
     { email = "rui@mixedbread.ai", name = "Rui Huang" },
@@ -14,11 +15,9 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
     "huggingface_hub>=0.16.4",

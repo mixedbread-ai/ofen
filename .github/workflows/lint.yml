@@ -1,4 +1,5 @@
 name: lint
+run-name: Lint ${{ inputs.working-directory }} by @${{ github.actor }}
 
 on:
   workflow_call:
