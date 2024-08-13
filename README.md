@@ -8,6 +8,12 @@ This project is currently under active development. Features and documentation m
 
 Ofen is a toolkit aimed at making transformer models production-ready. API included (in the future).
 
+## Installation
+
+```sh
+pip install "ofen[torch]"
+```
+
 ## Usage
 
 ```python
@@ -31,4 +37,4 @@ As this project is in its early stages, contributions are welcome. Please check 
 
 ## License
 
-[To be determined]
+Apache 2.0
