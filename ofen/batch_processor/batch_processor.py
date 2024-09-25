@@ -5,16 +5,18 @@ import logging
 import threading
 from asyncio import iscoroutinefunction
 from collections.abc import Awaitable
-from concurrent.futures import Future
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Any, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Union
 
 from ofen.batch_processor.batch_generator import BatchGenerator, InferenceItem
 from ofen.common.tensor_utils import torch_or_np
 from ofen.common.utils import first, is_method
 from ofen.configs.base.base_config import BaseConfig
 from ofen.types import ModelFeatures, ModelOutputs
+
+if TYPE_CHECKING:
+    from concurrent.futures import Future
 
 logger = logging.getLogger(__name__)
 

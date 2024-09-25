@@ -12,10 +12,11 @@ from ofen.common import numpy_utils
 from ofen.common.utils import bucket_batch_iter
 from ofen.models.base.model import BaseModel
 from ofen.runners.runner import Runner
-from ofen.types import ModelFeatures
 
 if TYPE_CHECKING:
     from torch import Tensor
+
+    from ofen.types import ModelFeatures
 
 
 class CrossEncoderOutput(TypedDict):

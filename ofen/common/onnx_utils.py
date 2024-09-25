@@ -216,7 +216,6 @@ class OnnxUtilities:
             onnx.ModelProto: Quantized ONNX model.
 
         """
-        model = ort_quantization.quant_pre_process(model)
         if quantization == Quantization.INT8:
             return OnnxUtilities.convert_to_int8(model)
         if quantization == Quantization.FP16:

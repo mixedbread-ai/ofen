@@ -9,10 +9,11 @@ from ofen.common.onnx_utils import OnnxUtilities
 from ofen.common.utils import auto_device
 from ofen.configs.base.base_config import BaseConfig
 from ofen.enums import ORTOptimizationLevel, Quantization
-from ofen.models.base.model import BaseModel, ModelFeatures
+from ofen.models.base.model import BaseModel
 
 if TYPE_CHECKING:
     from ofen.processors.base import BaseProcessor
+    from ofen.types import ModelFeatures
 
 
 @dataclasses.dataclass

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from ofen.models.base.encoder import BaseTextEncoder, EncoderOutput
+from ofen.models.base.encoder import EncoderOutput
 from ofen.models.base.ort_model import BaseORTModel
+from ofen.models.base.text_encoder import BaseTextEncoder
 from ofen.processors import TextProcessor
 
 
