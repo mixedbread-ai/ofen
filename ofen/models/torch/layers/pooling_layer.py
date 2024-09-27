@@ -136,6 +136,10 @@ def pool_mean(token_embeddings: Tensor, attention_mask: Tensor) -> Tensor:
     return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
 
+def identity_special(x: Tensor, _: Tensor) -> Tensor:
+    return x
+
+
 POOLING_FUNCTIONS: dict[PoolingStrategy, Callable[[Tensor, Tensor], Tensor]] = {
     PoolingStrategy.CLS: pool_cls,
     PoolingStrategy.MAX: pool_max,
@@ -144,7 +148,7 @@ POOLING_FUNCTIONS: dict[PoolingStrategy, Callable[[Tensor, Tensor], Tensor]] = {
     PoolingStrategy.WEIGHTED_MEAN: pool_weighted_mean,
     PoolingStrategy.LAST: pool_last,
     PoolingStrategy.SUM: pool_sum,
-    PoolingStrategy.NONE: lambda token_embeddings, _: token_embeddings,
+    PoolingStrategy.NONE: identity_special,
 }
 
 

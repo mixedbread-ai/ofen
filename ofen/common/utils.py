@@ -267,3 +267,19 @@ def add_async_methods(postfix: str = "_async"):
         return cls
 
     return decorator
+
+
+def identity(x: Any) -> Any:
+    """
+    Identity function that returns the input unchanged.
+
+    This function is useful in scenarios where a function is required as an argument,
+    but no transformation of the input is needed.
+
+    Args:
+        x (Any): The input value of any type.
+
+    Returns:
+        Any: The same value that was passed as input.
+    """
+    return x

@@ -4,13 +4,23 @@ from typing import Any, Callable
 
 from torch import Tensor, nn
 
+from ofen.common.utils import identity
 from ofen.enums import NormalizationStrategy
+
+
+def l2_normalize(x: Tensor) -> Tensor:
+    return nn.functional.normalize(x, p=2, dim=-1)
+
+
+def l1_normalize(x: Tensor) -> Tensor:
+    return nn.functional.normalize(x, p=1, dim=-1)
+
 
 # Define normalization functions for each strategy
 NORMALIZATION_FN_BY_STRATEGY: dict[NormalizationStrategy, Callable[[Tensor], Tensor]] = {
-    NormalizationStrategy.L2: lambda x: nn.functional.normalize(x, p=2, dim=-1),
-    NormalizationStrategy.L1: lambda x: nn.functional.normalize(x, p=1, dim=-1),
-    NormalizationStrategy.NONE: lambda x: x,
+    NormalizationStrategy.L2: l2_normalize,
+    NormalizationStrategy.L1: l1_normalize,
+    NormalizationStrategy.NONE: identity,
 }
 
 

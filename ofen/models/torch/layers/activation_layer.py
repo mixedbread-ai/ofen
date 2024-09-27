@@ -5,16 +5,22 @@ from typing import Any, Callable
 import torch
 from torch import Tensor, nn
 
+from ofen.common.utils import identity
 from ofen.enums import ActivationStrategy
 
 ActivationFunction = Callable[[Tensor], Tensor]
 
+
+def softmax(x: Tensor) -> Tensor:
+    return torch.softmax(x, dim=-1)
+
+
 ACTIVATION_FN_BY_STRATEGY: dict[ActivationStrategy, ActivationFunction] = {
     ActivationStrategy.SIGMOID: torch.sigmoid,
-    ActivationStrategy.SOFTMAX: lambda x: torch.softmax(x, dim=-1),
+    ActivationStrategy.SOFTMAX: softmax,
     ActivationStrategy.TANH: torch.tanh,
     ActivationStrategy.RELU: torch.relu,
-    ActivationStrategy.NONE: lambda x: x,
+    ActivationStrategy.NONE: identity,
 }
 
 
