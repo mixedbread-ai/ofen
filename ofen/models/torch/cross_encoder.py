@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 from transformers import AutoModelForSequenceClassification
 
-from ofen.common.tensor_utils import TorchModule
+from ofen.common.torch_utils import TorchModule
 from ofen.common.utils import auto_device
 from ofen.configs.base.base_config import BaseConfig
 from ofen.enums import ActivationStrategy

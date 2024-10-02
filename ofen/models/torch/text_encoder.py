@@ -4,10 +4,9 @@ import dataclasses
 from typing import Any
 
 from ofen.common.hf_utils import get_sentence_transformer_config, is_sentence_transformer
-from ofen.common.tensor_utils import TorchModule
+from ofen.common.torch_utils import TorchModule
 from ofen.common.utils import auto_device, ensure_import
 from ofen.enums import NormalizationStrategy, PoolingStrategy
-from ofen.models.base.encoder import EncoderOutput
 from ofen.models.base.model import BaseModel
 from ofen.models.base.text_encoder import BaseTextEncoder
 from ofen.models.mixins.onnx_exportable import OnnxExportable
@@ -15,6 +14,7 @@ from ofen.models.torch.layers.normalization_layer import NormalizationLayer
 from ofen.models.torch.layers.pooling_layer import PoolingLayer
 from ofen.pretrainable import Pretrainable
 from ofen.processors import TextProcessor
+from ofen.types import NDArrayOrTensor
 
 with ensure_import("ofen[torch]"):
     import torch
@@ -26,7 +26,6 @@ class TextEncoderConfig(Pretrainable):
     """Configuration class for TextEncoder.
 
     Attributes
-    ----------
         name_or_path (str): Name or path of the pre-trained model.
         model_kwargs (HFModelKwargs): Keyword arguments for the model.
         processor_kwargs (HFTokenizerKwargs): Keyword arguments for the processor.
@@ -44,32 +43,18 @@ class TextEncoderConfig(Pretrainable):
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)
 
-    @classmethod
-    def from_pretrained(cls, name_or_path: str, **hf_kwargs) -> TextEncoderConfig:
-        """Create a TextEncoderConfig instance from a pre-trained model.
-
-        Args:
-        ----
-            model_name_or_path (str): Name or path of the pre-trained model.
-            **hf_kwargs: Additional keyword arguments for HuggingFace models.
-
-        Returns:
-        -------
-            TextEncoderConfig: An instance of TextEncoderConfig.
-
-        """
+    @staticmethod
+    def get_pooling_strategy(name_or_path: str) -> PoolingStrategy:
         if is_sentence_transformer(name_or_path):
-            sbert_config = get_sentence_transformer_config(name_or_path, **hf_kwargs)
-            return cls(name_or_path=name_or_path, pooling_strategy=sbert_config.pooling_strategy)
-
-        return cls(name_or_path=name_or_path, pooling_strategy=PoolingStrategy.NONE)
+            sbert_config = get_sentence_transformer_config(name_or_path)
+            return sbert_config.pooling_strategy
+        return PoolingStrategy.NONE
 
 
 class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
     """TextEncoder for encoding text sequences into vectors.
 
     Attributes
-    ----------
         config (TextEncoderConfig): Configuration for the text encoder.
         pretrained_model (AutoModel): The underlying pre-trained model.
         _pooling_layer (PoolingLayer): Layer for pooling encoder outputs.
@@ -81,7 +66,7 @@ class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
         self,
         name_or_path: str,
         *,
-        pooling_strategy: PoolingStrategy | str = PoolingStrategy.NONE,
+        pooling_strategy: PoolingStrategy | str | None = None,
         normalize: bool = False,
         device: str = auto_device(),
         model_kwargs: dict[str, Any] | None = None,
@@ -91,7 +76,6 @@ class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
         """Initialize the TextEncoder.
 
         Args:
-        ----
             name_or_path (str): Name or path of the pre-trained model.
             pooling_strategy (Union[PoolingStrategy, str]): Strategy for pooling encoder outputs.
             normalize (bool): Whether to normalize the output embeddings.
@@ -101,7 +85,6 @@ class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
             processor (Optional[TextProcessor]): Custom text processor.
 
         Example:
-        -------
         ```python
         encoder = TextEncoder.from_pretrained("mixedbread-ai/mxbai-embed-large-v1")
         ```
@@ -120,7 +103,9 @@ class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
         self.pretrained_model = AutoModel.from_pretrained(name_or_path, **model_kwargs)
         self.config = TextEncoderConfig(
             name_or_path=name_or_path,
-            pooling_strategy=PoolingStrategy(pooling_strategy),
+            pooling_strategy=PoolingStrategy(pooling_strategy)
+            if pooling_strategy is not None
+            else TextEncoderConfig.get_pooling_strategy(name_or_path),
             normalize=normalize,
             model_kwargs=model_kwargs,
             processor_kwargs=processor_kwargs,
@@ -155,17 +140,15 @@ class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
         attention_mask: torch.Tensor,
         token_type_ids: torch.Tensor | None = None,
         convert_to_numpy: bool = True,
-    ) -> EncoderOutput:
+    ) -> dict[str, NDArrayOrTensor]:
         """Forward pass of the TextEncoder.
 
         Args:
-        ----
             input_ids (torch.Tensor): The input token IDs.
             attention_mask (torch.Tensor): The attention mask.
             token_type_ids (Optional[torch.Tensor]): The token type IDs.
 
         Returns:
-        -------
             EncoderOutput: An object containing the embeddings.
 
         """
@@ -183,19 +166,17 @@ class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
             )
             embeddings = self._normalization_layer(embeddings)
 
-            return EncoderOutput(embeddings=embeddings.detach().cpu() if convert_to_numpy else embeddings.detach())
+            return {"embeddings": embeddings.cpu() if convert_to_numpy else embeddings}
 
     @classmethod
     def from_pretrained(cls, name_or_path: str, **kwargs) -> TextEncoder:
         """Create a TextEncoder instance from a pre-trained model.
 
         Args:
-        ----
             name_or_path (str): Name or path of the pre-trained model.
             **kwargs: Additional keyword arguments.
 
         Returns:
-        -------
             TextEncoder: An instance of TextEncoder.
 
         """
@@ -206,12 +187,10 @@ class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
         """Create a TextEncoder instance from a configuration object.
 
         Args:
-        ----
             config (TextEncoderConfig): Configuration object.
             **kwargs: Additional keyword arguments.
 
         Returns:
-        -------
             TextEncoder: An instance of TextEncoder.
 
         """
@@ -223,11 +202,9 @@ class TextEncoder(BaseTextEncoder, TorchModule, OnnxExportable):
         """Export the model to ONNX format.
 
         Args:
-        ----
             path (Optional[str]): Path to save the ONNX model.
 
         Returns:
-        -------
             str: Path to the exported ONNX model.
 
         """

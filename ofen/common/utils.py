@@ -5,6 +5,8 @@ import functools
 import inspect
 import pathlib
 import threading
+import time
+from collections import defaultdict
 from collections.abc import Awaitable, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from queue import Queue
@@ -283,3 +285,78 @@ def identity(x: Any) -> Any:
         Any: The same value that was passed as input.
     """
     return x
+
+
+class Timer:
+    """Utility class for timing code execution of arbitrary actions."""
+
+    def __init__(self):
+        self.total_times = {}
+        self.counts = {}
+        self._start_time = time.perf_counter()
+        self._end_time = None
+
+    @contextmanager
+    def measure(self, name: str):
+        """Context manager to measure the execution time of a code block.
+
+        Args:
+            name (str): The name of the action being timed.
+        """
+        start_time = time.perf_counter()
+        yield
+        end_time = time.perf_counter()
+        elapsed = end_time - start_time
+        self.total_times[name] = self.total_times.get(name, 0.0) + elapsed
+        self.counts[name] = self.counts.get(name, 0) + 1
+
+    def total(self, name: str) -> float:
+        """Get the total time spent on a specific action.
+
+        Args:
+            name (str): The name of the action.
+
+        Returns:
+            float: Total time spent on the action.
+        """
+        return self.total_times.get(name, 0.0)
+
+    def average(self, name: str) -> float:
+        """Get the average time per occurrence of a specific action.
+
+        Args:
+            name (str): The name of the action.
+
+        Returns:
+            float: Average time per occurrence.
+        """
+        count = self.counts.get(name, 0)
+        if count == 0:
+            return 0.0
+        return self.total_times[name] / count
+
+    def total_elapsed(self) -> float:
+        """Get the total elapsed time since the timer was started.
+
+        Returns:
+            float: Total elapsed time.
+        """
+        if self._end_time is None:
+            return time.perf_counter() - self._start_time
+        return self._end_time - self._start_time
+
+    def end(self):
+        """Mark the end time of the timer."""
+        self._end_time = time.perf_counter()
+
+    def to_dict(self) -> dict:
+        """Convert the timer data to a dictionary.
+
+        Returns:
+            dict: A dictionary containing timer data.
+        """
+        result = defaultdict(float)
+        for key in self.total_times:
+            result[key] = self.total(key)
+            result[f"avg_{key}"] = self.average(key)
+        return result

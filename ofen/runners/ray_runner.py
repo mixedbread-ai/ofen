@@ -14,16 +14,14 @@ from ofen.logger import LOGGER
 from ofen.runners.runner import Runner, T
 
 if TYPE_CHECKING:
-    from ofen.batch_processor.batch_processor import BatchProcessorConfig
     from ofen.models.base.model import BaseModel
 
 
 def make_ray_runner(
     version: str = "0.0.1",
-    batch_config: BatchProcessorConfig | None = None,
     deployment_kwargs: dict | None = None,
     run_kwargs: dict | None = None,
-    bind_kwargs: dict | None = None,
+    force_redeploy: bool = False,
 ) -> Callable[[type[BaseModel]], type[BaseModel]]:
     """Decorator factory for creating a Ray-based engine class.
 
@@ -46,10 +44,9 @@ def make_ray_runner(
             return RayRunner.from_model_cls(
                 model_cls,
                 version=version,
-                batch_config=batch_config,
                 deployment_kwargs=deployment_kwargs or {},
                 run_kwargs=run_kwargs or {},
-                bind_kwargs=bind_kwargs or {},
+                force_redeploy=force_redeploy,
             )
         msg = f"make_ray_engine expects a class, got {type(model_cls)}"
         raise TypeError(msg)

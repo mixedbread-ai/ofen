@@ -4,7 +4,9 @@ import functools
 import inspect
 from typing import TYPE_CHECKING, Callable, TypeVar
 
-from ofen.batch_processor.generator.batch_processor import BatchProcessor, BatchProcessorConfig
+from batched import inference
+from batched.batch_processor import BatchProcessor
+
 from ofen.logger import LOGGER
 from ofen.runners.base import RunnerRequestInfo
 
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
 T = TypeVar("T", bound="BaseModel")
 
 
-def make_engine(batch_config: BatchProcessorConfig | None = None) -> Callable[[type[BaseModel]], type[BaseModel]]:
+def make_engine() -> Callable[[type[BaseModel]], type[BaseModel]]:
     """Defines an engine class from a model class.
 
     Args:
@@ -35,16 +37,15 @@ def make_engine(batch_config: BatchProcessorConfig | None = None) -> Callable[[t
     ```
 
     """
-    batch_config = batch_config or BatchProcessorConfig()
 
     def decorator(model_cls: type[BaseModel]) -> type[BaseModel]:
-        if inspect.isclass(model_cls):
-            return Runner.from_model_cls(
-                model_cls,
-                batch_config=batch_config,
-            )
-        msg = f"make_engine expects a class, got {type(model_cls)}"
-        raise TypeError(msg)
+        if not inspect.isclass(model_cls):
+            msg = f"make_engine expects a class, got {type(model_cls)}"
+            raise TypeError(msg)
+
+        return Runner.from_model_cls(
+            model_cls,
+        )
 
     return decorator
 
@@ -75,7 +76,7 @@ class Runner:
     def from_model_cls(
         cls,
         model_cls: type[T],
-        batch_config: BatchProcessorConfig | None = BatchProcessorConfig(),
+        **kwargs,
     ) -> type[T]:
         """Create a derived class from a model class with optional batch processing.
 
@@ -91,12 +92,12 @@ class Runner:
 
         """
         cls._validate_model_class(model_cls)
-        DerivedClass = cls._create_derived_class(model_cls, batch_config)
+        DerivedClass = cls._create_derived_class(model_cls)
         cls._prepare_decorators(model_cls, DerivedClass)
         return DerivedClass
 
     @classmethod
-    def _create_derived_class(cls, model_cls: type[T], batch_config: BatchProcessorConfig | None = None) -> type[T]:
+    def _create_derived_class(cls, model_cls: type[T]) -> type[T]:
         """Create a derived class from a model class with optional batch processing.
 
         Args:
@@ -115,13 +116,8 @@ class Runner:
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
 
-                if batch_config:
-                    self.forward = BatchProcessor.from_config(batch_config, super().forward)
-                    LOGGER.info(
-                        f"Initialized {self.__class__.__name__} with dynamic batching and config: {batch_config}"
-                    )
-                else:
-                    LOGGER.info(f"Initialized {self.__class__.__name__} without dynamic batching")
+                self.forward = inference.dynamically(super().forward)
+                LOGGER.info(f"Initialized {self.__class__.__name__} with dynamic batching")
 
         DerivedClass.__module__ = model_cls.__module__
         DerivedClass.__name__ = f"{model_cls.__name__}Engine"
@@ -165,14 +161,14 @@ class Runner:
                 return func(self, *args, **kwargs)
 
             with RunnerRequestInfo() as req:
-                req.batch_stats_in = self.forward.stats()
+                req.batch_stats_in = self.forward.stats
                 if has_usage:
                     result = func(self, *args, return_usage=True, **kwargs)
                     req.usage = result[1] if isinstance(result, tuple) and len(result) > 1 else None
                 else:
                     result = func(self, *args, **kwargs)
                     req.usage = None
-                req.batch_stats_out = self.forward.stats()
+                req.batch_stats_out = self.forward.stats
 
             return result, req
 
